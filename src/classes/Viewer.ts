@@ -9,7 +9,13 @@ export class Viewer {
   private readonly canvasSize: THREE.Vector2;
   private readonly renderSize: THREE.Vector2;
 
-  constructor(private readonly renderer: THREE.WebGLRenderer, private readonly canvas: HTMLCanvasElement) {
+  private readonly meshVis: THREE.Points;
+
+  constructor(
+    private readonly renderer: THREE.WebGLRenderer,
+    private readonly canvas: HTMLCanvasElement,
+    //private readonly audioContext: AudioContext,
+  ) {
     this.canvasSize = new THREE.Vector2();
     this.renderSize = new THREE.Vector2();
 
@@ -27,8 +33,12 @@ export class Viewer {
     this.scene.add(sun);
     this.scene.add(ambient);
 
+    this.meshVis = createVisMesh();
+
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial());
-    this.scene.add(mesh);
+    //this.scene.add(mesh);
+
+    this.scene.add(this.meshVis);
   }
 
   readonly update = (dt: number) => {
@@ -37,7 +47,7 @@ export class Viewer {
     // Do we need to resize the renderer?
     this.canvasSize.set(
       Math.floor(this.canvas.parentElement!.clientWidth),
-      Math.floor(this.canvas.parentElement!.clientHeight)
+      Math.floor(this.canvas.parentElement!.clientHeight),
     );
     if (!this.renderSize.equals(this.canvasSize)) {
       this.renderSize.copy(this.canvasSize);
@@ -49,4 +59,30 @@ export class Viewer {
 
     this.renderer.render(this.scene, this.camera);
   };
+}
+
+function createVisMesh(): THREE.Points {
+  const axisPointCount = 127;
+
+  const vertexArray = new Float32Array(axisPointCount * axisPointCount * 3);
+  const normalisation = 1 / axisPointCount;
+  const vector = new THREE.Vector3();
+  for (let y = 0; y < axisPointCount; y++) {
+    for (let x = 0; x < axisPointCount; x++) {
+      const xNormalised = x * normalisation - 0.5;
+      const yNormalised = y * normalisation - 0.5;
+      vector.set(xNormalised, 0, yNormalised);
+
+      const index = y * axisPointCount + x;
+      vector.toArray(vertexArray, index * 3);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  const positionAttrib = new THREE.Float32BufferAttribute(vertexArray, 3);
+  geometry.setAttribute('position', positionAttrib);
+
+  const material = new THREE.PointsMaterial({ color: 0x00aacc, size: 2.5, sizeAttenuation: false });
+
+  return new THREE.Points(geometry, material);
 }
