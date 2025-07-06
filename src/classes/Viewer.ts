@@ -64,7 +64,7 @@ export class Viewer {
 }
 
 function createVisMesh(): THREE.Points {
-  const axisPointCount = 16;
+  const axisPointCount = 64;
 
   const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
 

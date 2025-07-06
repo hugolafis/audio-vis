@@ -12,19 +12,18 @@ void main() {
 
     // Displacement
     float angle = (abs(atan(viewNormal.x, -viewNormal.y))) * PI * 2.0 * invPi;
-    angle *= displacementRange; 
+    angle *= displacementRange;
     vec3 displaced = position + normal * angle;
 
     // Fresnel 
-    vec3 displacedNormal = normalize(displaced);
-    vec3 displacedViewNormal = normalize( (viewMatrix * vec4(displacedNormal, 0.0)).xyz );
-    
-    float dotP = dot(displacedViewNormal, FORWARD);
+    float dotP = dot(viewNormal, FORWARD);
     dotP = clamp(dotP, 0.0, 1.0) * 2.0;
     float invDotP = 2.0 - dotP;
     float combined = dotP * invDotP;
-    fresnel = pow( combined, 2.0);
-
+    fresnel = pow( combined, 5.0);
+    // fresnel *= 4.0;
+    // fresnel = fresnel - fract(fresnel);
+    // fresnel *= 0.25;
 
     gl_PointSize = 2.5;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
