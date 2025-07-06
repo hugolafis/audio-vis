@@ -4,11 +4,17 @@ precision highp int;
 layout(location = 0) out vec4 pc_fragColor;
 
 in float fresnel;
+in float magnitude;
+
+vec3 lowColor = vec3(0.08, 0.29, 0.09);
+vec3 highColor = vec3(0.0, 0.93, 1.0) * 1.5;
 
 void main() {
-    if (fresnel < 0.3) { 
-        discard;
-    }
+    // if (fresnel < 0.1) { 
+    //     discard;
+    // }
 
-    pc_fragColor = vec4(vec3(fresnel), 1.0);
+    vec3 color = mix(lowColor, highColor, vec3(magnitude));
+
+    pc_fragColor = vec4(vec3(color), 1.0);
 }

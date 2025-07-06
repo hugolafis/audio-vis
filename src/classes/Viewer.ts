@@ -26,7 +26,7 @@ export class Viewer {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(75, this.canvas.clientWidth / this.canvas.clientHeight);
-    this.camera.position.set(1, 1, 1);
+    this.camera.position.set(0, 0, 1);
 
     this.controls = new OrbitControls(this.camera, this.canvas);
     this.controls.target.set(0, 0, 0);
@@ -65,11 +65,29 @@ export class Viewer {
   };
 }
 
+function generateFibonacciDiscPoints(count: number): THREE.Vector3[] {
+  const points: THREE.Vector3[] = [];
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399...
+
+  for (let i = 0; i < count; i++) {
+    const r = 0.5 * Math.sqrt((i + 0.5) / count); // sqrt for area-proportional radius
+    const theta = i * goldenAngle;
+
+    const x = r * Math.cos(theta);
+    const y = r * Math.sin(theta);
+
+    points.push(new THREE.Vector3(x, y, 0));
+  }
+
+  return points;
+}
+
 function createVisMesh(buffer: Uint8Array): THREE.Points {
   const axisPointCount = 64;
 
-  const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
-
+  const points = generateFibonacciDiscPoints(2048);
+  //const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
   const material = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3,
     vertexShader: pointsVS,
@@ -79,5 +97,5 @@ function createVisMesh(buffer: Uint8Array): THREE.Points {
     },
   });
 
-  return new THREE.Points(icoSphereGeometry, material);
+  return new THREE.Points(geometry, material);
 }

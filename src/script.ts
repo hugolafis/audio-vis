@@ -9,7 +9,7 @@ const clock = new THREE.Clock();
 
 const input = document.getElementById('audioInput');
 
-export const frequencyBinCount = 256;
+export const frequencyBinCount = 512;
 
 if (!canvas) {
   throw new Error('Canvas not found!');
