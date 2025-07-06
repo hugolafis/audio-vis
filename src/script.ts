@@ -1,3 +1,4 @@
+import { lerp } from 'three/src/math/MathUtils';
 import { Viewer } from './classes/Viewer';
 import './style.css';
 import * as THREE from 'three';
@@ -23,6 +24,34 @@ renderer.setSize(1, 1, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.LinearToneMapping;
 renderer.toneMappingExposure = 1.0;
+
+const audioContext = new AudioContext();
+
+// todo replace with fetch
+let elapsed = 0;
+const frequency = 300; // Hz
+const audioBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 3, audioContext.sampleRate);
+for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+  const channelData = audioBuffer.getChannelData(channel);
+  for (let i = 0; i < audioContext.sampleRate; i++) {
+    const t = Math.sin((2 * Math.PI * frequency * i) / audioContext.sampleRate);
+    channelData[i] = lerp(-1, 1, t);
+  }
+}
+
+const source = audioContext.createBufferSource();
+source.buffer = audioBuffer;
+
+source.connect(audioContext.destination);
+
+const button = document.createElement('button');
+button.innerHTML = 'TEST';
+button.style.position = 'absolute';
+button.onclick = () => {
+  source.start();
+};
+
+document.body.prepend(button);
 
 const viewer = new Viewer(renderer, canvas);
 

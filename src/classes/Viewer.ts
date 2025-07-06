@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import pointsVS from '../shaders/points.vs';
+import pointsFS from '../shaders/points.fs';
 
 export class Viewer {
   private camera: THREE.PerspectiveCamera;
@@ -62,27 +64,15 @@ export class Viewer {
 }
 
 function createVisMesh(): THREE.Points {
-  const axisPointCount = 127;
+  const axisPointCount = 16;
 
-  const vertexArray = new Float32Array(axisPointCount * axisPointCount * 3);
-  const normalisation = 1 / axisPointCount;
-  const vector = new THREE.Vector3();
-  for (let y = 0; y < axisPointCount; y++) {
-    for (let x = 0; x < axisPointCount; x++) {
-      const xNormalised = x * normalisation - 0.5;
-      const yNormalised = y * normalisation - 0.5;
-      vector.set(xNormalised, 0, yNormalised);
+  const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
 
-      const index = y * axisPointCount + x;
-      vector.toArray(vertexArray, index * 3);
-    }
-  }
+  const material = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    vertexShader: pointsVS,
+    fragmentShader: pointsFS,
+  });
 
-  const geometry = new THREE.BufferGeometry();
-  const positionAttrib = new THREE.Float32BufferAttribute(vertexArray, 3);
-  geometry.setAttribute('position', positionAttrib);
-
-  const material = new THREE.PointsMaterial({ color: 0x00aacc, size: 2.5, sizeAttenuation: false });
-
-  return new THREE.Points(geometry, material);
+  return new THREE.Points(icoSphereGeometry, material);
 }

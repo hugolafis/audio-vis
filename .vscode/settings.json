@@ -1,3 +1,6 @@
 {
-    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+  "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+  "webgl-glsl-editor.format.placeSpaceAfterKeywords": true,
+  "webgl-glsl-editor.format.placeSpacesInsideParentheses": true,
+  "webgl-glsl-editor.format.placeSpacesAroundBraces": false
 }
