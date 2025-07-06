@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import pointsVS from '../shaders/points.vs';
 import pointsFS from '../shaders/points.fs';
+import { frequencyBinCount } from '../script';
 
 export class Viewer {
   private camera: THREE.PerspectiveCamera;
@@ -12,6 +13,7 @@ export class Viewer {
   private readonly renderSize: THREE.Vector2;
 
   private readonly meshVis: THREE.Points;
+  readonly audioBuffer = new Uint8Array(frequencyBinCount);
 
   constructor(
     private readonly renderer: THREE.WebGLRenderer,
@@ -35,7 +37,7 @@ export class Viewer {
     this.scene.add(sun);
     this.scene.add(ambient);
 
-    this.meshVis = createVisMesh();
+    this.meshVis = createVisMesh(this.audioBuffer);
 
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial());
     //this.scene.add(mesh);
@@ -63,7 +65,7 @@ export class Viewer {
   };
 }
 
-function createVisMesh(): THREE.Points {
+function createVisMesh(buffer: Uint8Array): THREE.Points {
   const axisPointCount = 64;
 
   const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
@@ -72,6 +74,9 @@ function createVisMesh(): THREE.Points {
     glslVersion: THREE.GLSL3,
     vertexShader: pointsVS,
     fragmentShader: pointsFS,
+    uniforms: {
+      bufferData: { value: buffer },
+    },
   });
 
   return new THREE.Points(icoSphereGeometry, material);

@@ -1,9 +1,12 @@
+uniform float bufferData[128]; // todo keep in sync...
+
 out float fresnel;
 
 const float PI = 3.14159265359;
-const float invPi = 1.0 / PI;
-const vec3 FORWARD = vec3(0.0, 0.0, 1.0);
+const float invPi2 = 1.0 / (PI * 2.0);
+const vec3 FORWARD = vec3(0.0, 0.0, 1.0); // todo fix
 const float displacementRange = 1.0;
+const float uintToFloat = 1.0 / 255.0;
 
 void main() {
 
@@ -11,9 +14,14 @@ void main() {
     vec3 viewNormal = normalize( (viewMatrix * vec4(normal, 0.0)).xyz );
 
     // Displacement
-    float angle = (abs(atan(viewNormal.x, -viewNormal.y))) * PI * 2.0 * invPi;
-    angle *= displacementRange;
-    vec3 displaced = position + normal * angle;
+    //float angle = ((abs(atan(viewNormal.x, -viewNormal.y))) + PI) * invPi2;
+    float angle = atan(viewNormal.y, viewNormal.x);
+    float normalisedAngle = (angle + PI) / (2.0 * PI);
+
+    int bufferIndex = int(normalisedAngle * 128.0);
+    float bufferValue = bufferData[bufferIndex] * uintToFloat;
+
+    vec3 displaced = position + normal * bufferValue;
 
     // Fresnel 
     float dotP = dot(viewNormal, FORWARD);
