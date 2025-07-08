@@ -9,7 +9,7 @@ const clock = new THREE.Clock();
 
 const input = document.getElementById('audioInput');
 
-export const fftSize = 64;
+export const fftSize = 128;
 
 if (!canvas) {
   throw new Error('Canvas not found!');
@@ -30,7 +30,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(1); // for DPI scaling set to window.devicePixelRatio
 renderer.setSize(1, 1, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMapping = THREE.LinearToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const viewer = new Viewer(renderer, canvas);

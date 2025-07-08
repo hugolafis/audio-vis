@@ -49,7 +49,7 @@ export class Viewer {
     //this.scene.add(mesh);
 
     this.renderTarget = new THREE.WebGLRenderTarget(1, 1, { format: THREE.RGBAFormat });
-    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.15, 0.35);
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.2, 0.15, 0.0);
     this.bloomPass.renderToScreen = true;
 
     this.scene.add(this.meshVis);
