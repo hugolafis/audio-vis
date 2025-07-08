@@ -30,7 +30,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(1); // for DPI scaling set to window.devicePixelRatio
 renderer.setSize(1, 1, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.LinearToneMapping;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const viewer = new Viewer(renderer, canvas);
@@ -58,6 +58,7 @@ const audioContext = new AudioContext();
 let audioBufferSourceNode: AudioBufferSourceNode | undefined;
 const analyser = audioContext.createAnalyser();
 analyser.fftSize = frequencyBinCount;
+analyser.smoothingTimeConstant = 0.85;
 
 input.addEventListener('change', event => {
   const target = event.target;
@@ -91,9 +92,7 @@ input.addEventListener('change', event => {
 
       audioBufferSourceNode.start();
 
-      console.log(viewer.audioBuffer);
-
-      const channelData = audioBuffer.getChannelData(0);
+ 
     });
   };
 

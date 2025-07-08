@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import pointsVS from '../shaders/points.vs';
 import pointsFS from '../shaders/points.fs';
 import { frequencyBinCount } from '../script';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 
 export class Viewer {
   private camera: THREE.PerspectiveCamera;
@@ -14,6 +15,9 @@ export class Viewer {
 
   private readonly meshVis: THREE.Points;
   readonly audioBuffer = new Uint8Array(frequencyBinCount);
+
+  private readonly renderTarget: THREE.WebGLRenderTarget;
+  private readonly bloomPass: UnrealBloomPass;
 
   constructor(
     private readonly renderer: THREE.WebGLRenderer,
@@ -42,6 +46,10 @@ export class Viewer {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial());
     //this.scene.add(mesh);
 
+    this.renderTarget = new THREE.WebGLRenderTarget(1, 1, { format: THREE.RGBAFormat });
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 1, 0.15, 0.35);
+    this.bloomPass.renderToScreen = true;
+
     this.scene.add(this.meshVis);
   }
 
@@ -56,12 +64,18 @@ export class Viewer {
     if (!this.renderSize.equals(this.canvasSize)) {
       this.renderSize.copy(this.canvasSize);
       this.renderer.setSize(this.renderSize.x, this.renderSize.y, false);
+      this.renderTarget.setSize(this.renderSize.x, this.renderSize.y);
+      this.bloomPass.setSize(this.renderSize.x, this.renderSize.y);
 
       this.camera.aspect = this.renderSize.x / this.renderSize.y;
       this.camera.updateProjectionMatrix();
     }
 
+    this.renderer.setRenderTarget(this.renderTarget);
     this.renderer.render(this.scene, this.camera);
+
+    this.bloomPass.render(this.renderer, undefined as any, this.renderTarget, 0, false);
+
   };
 }
 
@@ -82,10 +96,11 @@ function generateFibonacciDiscPoints(count: number): THREE.Vector3[] {
   return points;
 }
 
+// todo redo this as a rect that gets transformed in the shader
 function createVisMesh(buffer: Uint8Array): THREE.Points {
   const axisPointCount = 64;
 
-  const points = generateFibonacciDiscPoints(2048);
+  const points = generateFibonacciDiscPoints(4096);
   //const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
   const material = new THREE.ShaderMaterial({

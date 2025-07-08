@@ -6,6 +6,7 @@ const float uintToFloat = 1.0 / 255.0;
 
 uniform float bufferData[256]; // todo keep in sync...
 
+out float vLength;
 out float fresnel;
 out float magnitude;
 
@@ -16,7 +17,7 @@ void main() {
 
     // Displacement
     //float angle = ((abs(atan(viewNormal.x, -viewNormal.y))) + PI) * invPi2;
-    float angle = atan(viewNormal.y, viewNormal.x);
+    float angle = atan(normal.y, normal.x);
     float normalisedAngle = (angle + PI) / (2.0 * PI);
 
     int bufferIndex = int(normalisedAngle * 256.0);
@@ -24,8 +25,11 @@ void main() {
 
     vec3 displaced = position + normal * bufferValue * displacementRange;
 
-    magnitude = (length(displaced) - 0.5) / 0.5;
-    magnitude = clamp(magnitude, 0.0, 1.0);
+    magnitude = length(position) * 2.0;
+    magnitude = clamp(magnitude, 0.0, 1.0) * bufferValue;
+
+    //displaced.z = sqrt(bufferValue * displacementRange) * magnitude;
+    //displaced = normalize(displaced);
 
     // Fresnel 
     float dotP = dot(viewNormal, FORWARD);
