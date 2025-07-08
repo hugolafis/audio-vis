@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import pointsVS from '../shaders/points.vs';
 import pointsFS from '../shaders/points.fs';
-import { frequencyBinCount } from '../script';
+import { fftSize } from '../script';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import barVS from '../shaders/bar.vs';
 import barFS from '../shaders/bar.fs';
@@ -16,7 +16,7 @@ export class Viewer {
   private readonly renderSize: THREE.Vector2;
 
   private readonly meshVis: THREE.Mesh;
-  readonly audioBuffer = new Uint8Array(frequencyBinCount);
+  readonly audioBuffer = new Uint8Array(fftSize / 2);
 
   private readonly renderTarget: THREE.WebGLRenderTarget;
   private readonly bloomPass: UnrealBloomPass;
@@ -49,7 +49,7 @@ export class Viewer {
     //this.scene.add(mesh);
 
     this.renderTarget = new THREE.WebGLRenderTarget(1, 1, { format: THREE.RGBAFormat });
-    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 1, 0.15, 0.35);
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.15, 0.35);
     this.bloomPass.renderToScreen = true;
 
     this.scene.add(this.meshVis);
@@ -73,10 +73,10 @@ export class Viewer {
       this.camera.updateProjectionMatrix();
     }
 
-    //this.renderer.setRenderTarget(this.renderTarget);
+    this.renderer.setRenderTarget(this.renderTarget);
     this.renderer.render(this.scene, this.camera);
 
-    //this.bloomPass.render(this.renderer, undefined as any, this.renderTarget, 0, false);
+    this.bloomPass.render(this.renderer, undefined as any, this.renderTarget, 0, false);
   };
 }
 
@@ -164,7 +164,7 @@ function createVisMesh(buffer: Uint8Array): THREE.Mesh {
     defines: {
       NUM_BARS: buffer.length,
     },
-    wireframe: true,
+    side: THREE.DoubleSide,
   });
 
   return new THREE.Mesh(geometry, material);

@@ -8,7 +8,8 @@ void main() {
   vec3 transformed = position;
 
   if (position.y >= 0.0) {
-    transformed.y = -1.0 + (bufferData[bufferIndex] * uintToFloat);
+    float val = (bufferData[bufferIndex] * uintToFloat) * 2.0;
+    transformed.y = -1.0 + val;
   }
 
   gl_Position = vec4(transformed, 1.0);

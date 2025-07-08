@@ -9,7 +9,7 @@ const clock = new THREE.Clock();
 
 const input = document.getElementById('audioInput');
 
-export const frequencyBinCount = 64;
+export const fftSize = 64;
 
 if (!canvas) {
   throw new Error('Canvas not found!');
@@ -57,7 +57,7 @@ function update() {
 const audioContext = new AudioContext();
 let audioBufferSourceNode: AudioBufferSourceNode | undefined;
 const analyser = audioContext.createAnalyser();
-analyser.fftSize = frequencyBinCount;
+analyser.fftSize = fftSize;
 analyser.smoothingTimeConstant = 0.85;
 
 input.addEventListener('change', event => {
