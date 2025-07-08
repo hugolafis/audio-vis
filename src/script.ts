@@ -9,7 +9,7 @@ const clock = new THREE.Clock();
 
 const input = document.getElementById('audioInput');
 
-export const frequencyBinCount = 512;
+export const frequencyBinCount = 64;
 
 if (!canvas) {
   throw new Error('Canvas not found!');
@@ -91,8 +91,6 @@ input.addEventListener('change', event => {
       analyser.connect(audioContext.destination);
 
       audioBufferSourceNode.start();
-
- 
     });
   };
 
