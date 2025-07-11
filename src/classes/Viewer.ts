@@ -16,10 +16,14 @@ export class Viewer {
   private readonly renderSize: THREE.Vector2;
 
   private readonly meshVis: THREE.Mesh;
+  private readonly peakVis: THREE.Mesh;
   readonly audioBuffer = new Uint8Array(fftSize / 2);
+  readonly peakBuffer = new Float32Array(fftSize / 2);
 
   private readonly renderTarget: THREE.WebGLRenderTarget;
   private readonly bloomPass: UnrealBloomPass;
+
+  private peakFall = 0;
 
   constructor(
     private readonly renderer: THREE.WebGLRenderer,
@@ -44,6 +48,7 @@ export class Viewer {
     this.scene.add(ambient);
 
     this.meshVis = createVisMesh(this.audioBuffer);
+    this.peakVis = createVisMesh(this.peakBuffer);
 
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial());
     //this.scene.add(mesh);
@@ -52,7 +57,8 @@ export class Viewer {
     this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.2, 0.15, 0.0);
     this.bloomPass.renderToScreen = true;
 
-    this.scene.add(this.meshVis);
+    //this.scene.add(this.meshVis);
+    this.scene.add(this.peakVis);
   }
 
   readonly update = (dt: number) => {
@@ -72,6 +78,10 @@ export class Viewer {
       this.camera.aspect = this.renderSize.x / this.renderSize.y;
       this.camera.updateProjectionMatrix();
     }
+
+    this.peakBuffer.forEach((val, index) => {
+      const audioVal = this.audioBuffer[index];
+    });
 
     this.renderer.setRenderTarget(this.renderTarget);
     this.renderer.render(this.scene, this.camera);
@@ -97,7 +107,7 @@ function generateFibonacciDiscPoints(count: number): THREE.Vector3[] {
   return points;
 }
 
-function createVisMesh(buffer: Uint8Array): THREE.Mesh {
+function createVisMesh(buffer: THREE.TypedArray): THREE.Mesh {
   const barVertexCount = 4; // 4 vertices per ba
   const barTriangleCount = 2; // 2 triangles per bar
 
@@ -107,7 +117,6 @@ function createVisMesh(buffer: Uint8Array): THREE.Mesh {
   const indices = new Uint32Array(buffer.length * barTriangleCount * 3);
 
   const scaling = 1.0 / buffer.length;
-
   const position = new THREE.Vector3();
   for (let i = 0; i < buffer.length; i++) {
     const stride = i * barVertexCount;
@@ -165,6 +174,7 @@ function createVisMesh(buffer: Uint8Array): THREE.Mesh {
       NUM_BARS: buffer.length,
     },
     side: THREE.DoubleSide,
+    depthFunc: THREE.AlwaysDepth,
   });
 
   return new THREE.Mesh(geometry, material);
@@ -188,3 +198,7 @@ function createVisMesh(buffer: Uint8Array): THREE.Mesh {
 
 //   return new THREE.Points(geometry, material);
 // }
+
+function easeInQuint(x: number): number {
+  return x * x * x * x * x;
+}

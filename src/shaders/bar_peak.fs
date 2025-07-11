@@ -1,0 +1,11 @@
+precision highp float;
+precision highp int;
+
+in float height;
+
+layout(location = 0) out vec4 pc_fragColor;
+
+void main() {
+  float val = height;
+  pc_fragColor = vec4(vec3(val), 1.0);
+}

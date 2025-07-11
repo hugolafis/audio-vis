@@ -58,7 +58,7 @@ const audioContext = new AudioContext();
 let audioBufferSourceNode: AudioBufferSourceNode | undefined;
 const analyser = audioContext.createAnalyser();
 analyser.fftSize = fftSize;
-analyser.smoothingTimeConstant = 0.85;
+analyser.smoothingTimeConstant = 0.8;
 
 input.addEventListener('change', event => {
   const target = event.target;
