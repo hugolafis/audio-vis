@@ -6,6 +6,8 @@ import { fftSize } from '../script';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import barVS from '../shaders/bar.vs';
 import barFS from '../shaders/bar.fs';
+import barPeakVS from '../shaders/bar_peak.vs';
+import barPeakFS from '../shaders/bar_peak.fs';
 
 export class Viewer {
   private camera: THREE.PerspectiveCamera;
@@ -19,6 +21,7 @@ export class Viewer {
   private readonly peakVis: THREE.Mesh;
   readonly audioBuffer = new Uint8Array(fftSize / 2);
   readonly peakBuffer = new Float32Array(fftSize / 2);
+  readonly peakVelocity = new Float32Array(fftSize / 2);
 
   private readonly renderTarget: THREE.WebGLRenderTarget;
   private readonly bloomPass: UnrealBloomPass;
@@ -48,7 +51,7 @@ export class Viewer {
     this.scene.add(ambient);
 
     this.meshVis = createVisMesh(this.audioBuffer);
-    this.peakVis = createVisMesh(this.peakBuffer);
+    this.peakVis = createVisPeakMesh(this.peakBuffer);
 
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial());
     //this.scene.add(mesh);
@@ -57,7 +60,7 @@ export class Viewer {
     this.bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.2, 0.15, 0.0);
     this.bloomPass.renderToScreen = true;
 
-    //this.scene.add(this.meshVis);
+    this.scene.add(this.meshVis);
     this.scene.add(this.peakVis);
   }
 
@@ -80,7 +83,19 @@ export class Viewer {
     }
 
     this.peakBuffer.forEach((val, index) => {
-      const audioVal = this.audioBuffer[index];
+      const audioVal = this.audioBuffer[index] / 255;
+
+      this.peakVelocity[index] += dt * 0.5;
+      const t = this.peakVelocity[index];
+      const decayFactor = easeIn(t);
+      let newValue = val - decayFactor;
+
+      if (newValue <= audioVal) {
+        this.peakVelocity[index] = 0;
+        newValue = audioVal;
+      }
+    
+      this.peakBuffer[index] = Math.max(newValue, audioVal);
     });
 
     this.renderer.setRenderTarget(this.renderTarget);
@@ -107,7 +122,7 @@ function generateFibonacciDiscPoints(count: number): THREE.Vector3[] {
   return points;
 }
 
-function createVisMesh(buffer: THREE.TypedArray): THREE.Mesh {
+function createVisGeometry(buffer: THREE.TypedArray): THREE.BufferGeometry {
   const barVertexCount = 4; // 4 vertices per ba
   const barTriangleCount = 2; // 2 triangles per bar
 
@@ -163,6 +178,12 @@ function createVisMesh(buffer: THREE.TypedArray): THREE.Mesh {
   geometry.setAttribute('position', positionAttrib);
   geometry.setAttribute('bufferIndex', bufferIndexAttrib);
 
+  return geometry;
+}
+
+function createVisMesh(buffer: THREE.TypedArray): THREE.Mesh {
+  const geometry = createVisGeometry(buffer);
+
   const material = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3,
     vertexShader: barVS,
@@ -180,25 +201,26 @@ function createVisMesh(buffer: THREE.TypedArray): THREE.Mesh {
   return new THREE.Mesh(geometry, material);
 }
 
-// todo redo this as a rect that gets transformed in the shader
-// function createVisMesh(buffer: Uint8Array): THREE.Points {
-//   const axisPointCount = 64;
+function createVisPeakMesh(buffer: THREE.TypedArray): THREE.Mesh {
+    const geometry = createVisGeometry(buffer);
 
-//   const points = generateFibonacciDiscPoints(4096);
-//   //const icoSphereGeometry = new THREE.IcosahedronGeometry(1, axisPointCount);
-//   const geometry = new THREE.BufferGeometry().setFromPoints(points);
-//   const material = new THREE.ShaderMaterial({
-//     glslVersion: THREE.GLSL3,
-//     vertexShader: pointsVS,
-//     fragmentShader: pointsFS,
-//     uniforms: {
-//       bufferData: { value: buffer },
-//     },
-//   });
+  const material = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    vertexShader: barPeakVS,
+    fragmentShader: barPeakFS,
+    uniforms: {
+      bufferData: { value: buffer },
+    },
+    defines: {
+      NUM_BARS: buffer.length,
+    },
+    side: THREE.DoubleSide,
+    depthFunc: THREE.AlwaysDepth,
+  });
 
-//   return new THREE.Points(geometry, material);
-// }
+  return new THREE.Mesh(geometry, material);
+}
 
-function easeInQuint(x: number): number {
-  return x * x * x * x * x;
+function easeIn(x: number): number {
+return x === 0 ? 0 : Math.pow(2, 12 * x - 12);
 }
